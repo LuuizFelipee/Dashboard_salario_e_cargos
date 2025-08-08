@@ -4,5 +4,5 @@
 - tecnologias utilizadas: Python, Plotly e Streamlit
 - Feito junto com a imersão Alura de Ciencia de Dados
 
-link para acesso: https://dashboard-salarios-ciencia-de-dados.streamlit.app/
+link para acesso: https://dashboard-salarios-e-cargos.streamlit.app/
 
