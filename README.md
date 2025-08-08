@@ -1,5 +1,8 @@
 # Dashboard sobre salários e cargos de uma empresa 
-Dashboard feito em python utilizando a biblioteca pandas, plotly e Streamlit, durante uma imersão de dados conduzido pela Alura, capaz de demonstrar de forma clara inumeras informações sobre salário e cargo
+
+- Projeto feito para fins de estudo e desenvolvimento
+- tecnologias utilizadas: Python, Plotly e Streamlit
+- Feito junto com a imersão Alura de Ciencia de Dados
 
 link para acesso: https://dashboard-salarios-ciencia-de-dados.streamlit.app/
 
