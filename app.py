@@ -1,138 +1,101 @@
 import pandas as pd
+import streamlit as st
 import plotly.express as px
-import streamlit as st 
 
+# Importando dados
+df = pd.read_csv('./casas_final.csv')
 
-#---------------- Configurações da página ----------------#
-#Define título da página, o icone e o layout para ocupar a largura total
+# Configuração da página
 st.set_page_config(
-    page_title="Dashboard de Salários na Áreas de dados",
-    page_icon="📊",
-    layout= "wide"
-
+    page_title='Preços das casas',
+    page_icon='🏠',
+    layout='wide'
 )
 
-#Carrega os dados
-df = pd.read_csv("https://raw.githubusercontent.com/vqrca/dashboard_salarios_dados/refs/heads/main/dados-imersao-final.csv")
+# Condeudo principal
+st.title("Influência no preço das casas")
+st.markdown("Dashboard feito para desafio técnico da Cati Jr, Analisando fatores que influenciam no preço das casas")
 
-#---------------- Barra Lateral ----------------#
-st.sidebar.header("Filtros")
-
-#Filtro de Ano
-anos_disponiveis = sorted(df["ano"].unique())
-anos_selecionados = st.sidebar.multiselect("Ano", anos_disponiveis, default=anos_disponiveis)
-
-#Filtro de Senioridade
-senioridade_disponiveis = sorted(df["senioridade"].unique())
-senioridade_selecionados = st.sidebar.multiselect("Senioridade", senioridade_disponiveis, default=senioridade_disponiveis)
-
-#Filtro de Contrato
-contrato_disponiveis = sorted(df["contrato"].unique())
-contrato_selecionados = st.sidebar.multiselect("Contrato", contrato_disponiveis, default=contrato_disponiveis)
-
-# Filtro por Tamanho da Empresa
-tamanhos_disponiveis = sorted(df['tamanho_empresa'].unique())
-tamanhos_selecionados = st.sidebar.multiselect("Tamanho da Empresa", tamanhos_disponiveis, default=tamanhos_disponiveis)
-
-# --- Filtragem do DataFrame ---
-# O dataframe principal é filtrado com base nas seleções feitas na barra lateral.
-df_filtrado = df[
-    (df['ano'].isin(anos_selecionados)) &
-    (df['senioridade'].isin(senioridade_selecionados)) &
-    (df['contrato'].isin(contrato_selecionados)) &
-    (df['tamanho_empresa'].isin(tamanhos_selecionados))
-]
-
-
-#---------------- Conteudo principal ----------------#
-st.title("Dashboard de Salários na Áreas de dados")
-st.markdown("Explore os dados salariais na área de dados nos últimos anos. Utilize os filtros à esquerda para refinar sua análise.")
-
-# --- Métricas Principais (KPIs) ---
-st.subheader("Métricas gerais (Salário anual em USD)")
-
-if not df_filtrado.empty:
-    salario_medio = df_filtrado['usd'].mean()
-    salario_maximo = df_filtrado['usd'].max()
-    total_registros = df_filtrado.shape[0]
-    cargo_mais_frequente = df_filtrado["cargo"].mode()[0]
-else:
-    salario_medio, salario_mediano, salario_maximo, total_registros, cargo_mais_frequente= 0, 0, 0, ""
+# Metricas Principais
+st.subheader("Metricas gerais")
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Salário médio", f"${salario_medio:,.0f}")
-col2.metric("Salário máximo", f"${salario_maximo:,.0f}")
-col3.metric("Total de registros", f"{total_registros:,}")
-col4.metric("Cargo mais frequente", cargo_mais_frequente)
+
+col1.metric("Média dos preços", f"{df['PrecoVenda'].mean():.2f}")
+col2.metric("Menor preço", f"{df['PrecoVenda'].min():.2f}")
+col3.metric("Maior preço", f"{df['PrecoVenda'].max():.2f}")
+col4.metric("Desvio padrão", f"{df['PrecoVenda'].std():.2f}")
 
 st.markdown("---")
 
+#Principais informações sobre Preço venda
+st.subheader("Informações sobre preço venda")
 col_graf1, col_graf2 = st.columns(2)
 
 with col_graf1:
-    if not df_filtrado.empty:
-        top_cargos = df_filtrado.groupby('cargo')['usd'].mean().nlargest(10).sort_values(ascending=True).reset_index()
-        grafico_cargos = px.bar(
-            top_cargos,
-            x='usd',
-            y='cargo',
-            orientation='h',
-            title="Top 10 cargos por salário médio",
-            labels={'usd': 'Média salarial anual (USD)', 'cargo': ''}
-        )
-        grafico_cargos.update_layout(title_x=0.1, yaxis={'categoryorder':'total ascending'})
-        st.plotly_chart(grafico_cargos, use_container_width=True)
-    else:
-        st.warning("Nenhum dado para exibir no gráfico de cargos.")
+   grafico_hist = px.histogram(
+            df,
+            x='PrecoVenda',
+            nbins=30,
+            title="Distribuição de Preços",
+            labels={'PrecoVenda': 'Preços', 'count': ''}
+   )
+   grafico_hist.update_layout(title_x=0.1)
+   st.plotly_chart(grafico_hist, use_container_width=True)
 
 with col_graf2:
-    if not df_filtrado.empty:
-        grafico_hist = px.histogram(
-            df_filtrado,
-            x='usd',
-            nbins=30,
-            title="Distribuição de salários anuais",
-            labels={'usd': 'Faixa salarial (USD)', 'count': ''}
-        )
-        grafico_hist.update_layout(title_x=0.1)
-        st.plotly_chart(grafico_hist, use_container_width=True)
-    else:
-        st.warning("Nenhum dado para exibir no gráfico de distribuição.")
+   grafico_box = px.box(
+            df,
+            x='PrecoVenda',
+            title='Distribuição de Preços'
+   )
+   grafico_box.update_layout(title_x=0.1)
+   st.plotly_chart(grafico_box, use_container_width=True)
 
-col_graf3, col_graf4 = st.columns(2)
+st.markdown("---")
+st.subheader("Informações sobre Vizinhança")
 
-with col_graf3:
-    if not df_filtrado.empty:
-        remoto_contagem = df_filtrado['remoto'].value_counts().reset_index()
-        remoto_contagem.columns = ['tipo_trabalho', 'quantidade']
-        grafico_remoto = px.pie(
-            remoto_contagem,
-            names='tipo_trabalho',
-            values='quantidade',
-            title='Proporção dos tipos de trabalho',
-            hole=0.5
-        )
-        grafico_remoto.update_traces(textinfo='percent+label')
-        grafico_remoto.update_layout(title_x=0.1)
-        st.plotly_chart(grafico_remoto, use_container_width=True)
-    else:
-        st.warning("Nenhum dado para exibir no gráfico dos tipos de trabalho.")
+#Informações gerais sobre o Dataset
+col_graf1, col_graf2 = st.columns(2)
 
-with col_graf4:
-    if not df_filtrado.empty:
-        df_ds = df_filtrado[df_filtrado['cargo'] == 'Data Scientist']
-        media_ds_pais = df_ds.groupby('residencia_iso3')['usd'].mean().reset_index()
-        grafico_paises = px.choropleth(media_ds_pais,
-            locations='residencia_iso3',
-            color='usd',
-            color_continuous_scale='rdylgn',
-            title='Salário médio de Cientista de Dados por país',
-            labels={'usd': 'Salário médio (USD)', 'residencia_iso3': 'País'})
-        grafico_paises.update_layout(title_x=0.1)
-        st.plotly_chart(grafico_paises, use_container_width=True)
-    else:
-        st.warning("Nenhum dado para exibir no gráfico de países.")
+media_por_bairro = df.groupby('Vizinhanca')['PrecoVenda'].mean().reset_index()
+media_por_bairro = media_por_bairro.sort_values(
+    by='PrecoVenda',
+    ascending = False
+)
+with col_graf1:
+  grafico_boxplot = px.bar(
+      media_por_bairro,
+      x='PrecoVenda',
+      y='Vizinhanca',
+      title='Distribuição de Preços por Vizinhança',
+      color='Vizinhanca'
+  )
+  grafico_boxplot.update_layout(title_x=0.1)
+  st.plotly_chart(grafico_boxplot, use_container_width=True)
 
-# --- Tabela de Dados Detalhados ---
-st.subheader("Dados Detalhados")
-st.dataframe(df_filtrado)
+media_por_bairro = df.groupby('Vizinhanca')['QualidadeGeral'].mean().reset_index()
+media_por_bairro = media_por_bairro.sort_values(
+    by='QualidadeGeral',
+    ascending = False
+)
+with col_graf2:
+  grafico_boxplot2 = px.bar(
+      media_por_bairro,
+      x='QualidadeGeral',
+      y='Vizinhanca',
+      title='Distribuição de Vizinhanca por Qualidade',
+      color='Vizinhanca'
+  )
+  grafico_boxplot2.update_layout(title_x=0.1)
+  st.plotly_chart(grafico_boxplot2, use_container_width=True)
+
+grafico_dispercao_zoneamento = px.scatter(
+    df,
+    x='PrecoVenda',
+    y='Zoneamento',
+    title='Preços por Zoneamento',
+    color='Zoneamento'
+  )
+grafico_dispercao_zoneamento.update_layout(title_x=0.1)
+st.plotly_chart(grafico_dispercao_zoneamento, use_container_width=True)
