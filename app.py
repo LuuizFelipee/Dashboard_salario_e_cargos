@@ -90,12 +90,13 @@ with col_graf2:
   grafico_boxplot2.update_layout(title_x=0.1)
   st.plotly_chart(grafico_boxplot2, use_container_width=True)
 
-grafico_dispercao_zoneamento = px.scatter(
-    df,
-    x='PrecoVenda',
-    y='Zoneamento',
-    title='Preços por Zoneamento',
-    color='Zoneamento'
-  )
+with col_graf1:
+  grafico_dispercao_zoneamento = px.scatter(
+      df,
+      x='PrecoVenda',
+      y='Zoneamento',
+      title='Preços por Zoneamento',
+      color='Zoneamento'
+    )
 grafico_dispercao_zoneamento.update_layout(title_x=0.1)
 st.plotly_chart(grafico_dispercao_zoneamento, use_container_width=True)
